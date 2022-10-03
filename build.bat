@@ -1,0 +1,1 @@
+python -m venv venv&cd venv\Scripts&activate&cd ../..&pip install -r requirements.txt&ren venv\Lib\site-packages\crypto Crypto&pip install pyinstaller&pyinstaller -F substitute.py -i NONE --clean&copy dist\substitute.exe substitute.exe

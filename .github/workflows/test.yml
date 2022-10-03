@@ -1,0 +1,60 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: test
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.7"
+    - name: Install dependencies
+      run: |
+        tzutil /s "China Standard Time"
+        python -m pip install --upgrade pip
+    - name: Lint with flake8
+      run: |
+        pip install flake8
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - name: build
+      run: |
+        build.bat
+    - name: changelog
+      shell: python
+      run: |
+        # -*- coding: utf-8 -*-
+        import re
+        with open('CHANGELOG.txt', 'r', encoding='utf8') as f:
+          data = f.read()
+        list1 = re.split('\d+\.\d+\.\d+.*', data)
+        with open('Release-CHANGELOG.txt', 'w+', encoding='utf8') as f:
+          f.write(list1[1].strip())
+        import os
+        import time
+        env_file = os.getenv('GITHUB_ENV')
+        with open(env_file, "a") as f:
+          f.write("substitute={}".format(time.strftime('0.%y.%m%d%H')))
+    - name: print changelog
+      run: |
+        chcp 65001
+        type Release-CHANGELOG.txt
+    - name: Upload
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ env.substitute }}
+        path: substitute.exe
+        
